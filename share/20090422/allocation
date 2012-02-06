@@ -1,0 +1,203 @@
+Allocation of Frames
+   - 3 free frames at all times
+   - consider a machine where all memory-reference instructions have only
+     one memory address => need 2 frames of memory
+        - now consider indirect modes of addressing
+        - potentially every page in virtual memory could be touched,
+          and the entire virtual memory must be in physical memory
+        - place a limit the levels of indirection
+
+   - the minimum number of frames per process is defined by the computer
+     architecture
+   - the maximum number of frames is defined by the amount of available
+     physical memory
+
+Allocation Algorithms
+
+m frames, n processes
+
+equal allocation: give each process m/n frames
+
+alternative is to recognize that various processes will need
+different amounts of memory
+
+consider
+   - 1k frame size
+   - 62 free frames
+   - student process requiring: 10k
+   - interactive database requiring: 127k
+
+makes no sense to give each process 31 frames;
+
+the student process needs no more than 10 so the additional 21 frames
+are wasted
+
+proportional allocation:
+
+   - m frames available
+
+   - size of virtual memory for process p_i is s_i
+
+   - S = Sigma s_i
+
+   - a_i = (s_i/S) * m
+
+student process gets 4 frames = (10/137)*62
+
+database gets 57 frames = (127/137)*62
+
+what about priority? use priority rather than relative size to determine
+ratio of frames
+
+Global vs. Local Allocation
+
+   Is page-replacement global or local?
+
+   global: one process can select a replacement frame from the set of all
+           frames, i.e., one process can take a frame from another
+
+   local:  each process can only select from its own set of allocated frames
+
+   e.g., high priority processes can take the frames of low priority processes
+
+   local page replacement is more predictable; depends on no external factors
+
+   a process which uses global page replacement cannot predict the page fault
+   rate; may execute in 0.5 seconds once and 10.3 on another run
+
+   overall, global replacement results in greater system throughput
+
+Thrashing
+   - simple thrashing: 1 process, 2 pages, only allocated 1 frame
+   - high page activity is called thrashing
+   - a process is thrashing if it spends more time paging than executing
+
+Scenario:
+
+The process scheduler see that CPU utilization is low
+
+so we increase the degree of multiprogramming by introducing a new process to
+the system
+
+global-page replacement used
+
+one process now needs more frames
+
+it starts faulting and taking aways frames from other processes
+
+these processes need those pages and thus they start to fault, taking
+frames from other processes
+
+these faulting processes must use the paging device to swap pages in and out
+
+as they queue up on the paging device, the ready-queue empties
+
+however, as processes wait on the paging device, CPU utilization decreases
+
+the process scheduler sees the decreasing CPU utilization and increases
+the degree of multiprogramming, ad infinitum
+
+result is thrashing, page-fault rates increase tremendously, effective memory
+access time increases, no work is getting done, because all the processes are
+spending their time paging
+
+figure
+
+we can limit the effects of thrashing by using a local replacement algorithm
+(or priority replacement algorithm)
+
+but this only partially solves the problem:
+
+if one process starts thrashing, it cannot steal frames of another process
+and cause the later to thrash
+
+however, the thrashing processes will be in the paging device queue which will
+increase the time for a page fault to be serviced and, therefore, the effective
+access time will increase even for those processes not thrashing
+
+to prevent thrashing, we must provide processes with as many frames as
+they need?
+
+But how do we know how many frames a process "needs"?
+
+Look at how many frames a process actually "uses".
+
+Locality model: as a process executes, it moves from locality to locality.
+
+A locality is a set of pages used together. A program is generally
+composed of several localities which may overlap.
+
+For example, when a function is called, it defines a new locality.
+
+Note that the locality model is the basic unstated assumption behind cache.
+
+If accesses to any types of data were random rather than patterned, cache
+would be useless.
+
+If we allocate enough for a process to accommodate its current locality,
+it will fault for the pages in its locality until all of these
+pages are in memory.  Then it will not fault again until it changes locality.
+
+If we allocate fewer frames than the size of the current locality, the process
+will thrash since it cannot keep in memory all the pages which it is actively
+using.
+
+Working Set Model
+
+is based on the assumption of locality.
+
+Delta defines the working-set window.
+
+Examine the most recent Delta page references.
+
+The set of pages in the most recent Delta is the "working set"
+
+The working set is an approximation of the program's locality.
+
+The accuracy of the working set depends on the selection of Delta.
+
+If Delta is too small, it will not encompass the entire locality.
+
+If Delta is too large, it may overlap several localities.
+
+If Delta is infinity, the working set is the set of all pages touched
+during process execution.
+
+WSS_i is working set size for process p_i
+
+D = Sigma WSS_i,
+
+where D is the total demand from frames
+
+if D > m, then thrashing will occur, because some processes will not have
+enough frames
+
+Using the working-set strategy is simple:
+
+   the OS monitors the working set of each process
+
+   and allocates to that working set enough frames to provide it with its
+   working-set size
+
+   if there are enough extra frames, a new process can be initiated
+
+   if the sum of the working set sizes increases, exceeding the total
+   number of available frames, the OS selects a process to suspend
+
+The working set strategy prevents thrashing while keeping the degree of
+multiprogramming as high as possible and optimizes CPU utilization.
+
+Page Fault Frequency
+
+   working set model is successful but keeping track of the working set
+   can become complex
+
+   using page-fault frequency (PFF)
+   is a more direct approach to prevent thrashing
+
+   if PFF is too high, we know the process needs more frames
+   if PFF is too low, then we know the process has too many frames
+
+
+
+ZZ

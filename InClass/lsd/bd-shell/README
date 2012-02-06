@@ -1,0 +1,6 @@
+BD-shell (a.k.a. bdsh) is a tiny Unix shell with job-contol functionalities, written in C language. It?s a project required for the Operating System Course at my University (http://www.inf.unibz.it). 
+The official page for this project is http://daniel.graziotin.net/projects/bd-shell
+If you want to see the functionalities of the shell, take a look at the doc/ folder.
+To compile the shell, simply run:
+make
+And the executable called bdsh will be created. Have fun!
