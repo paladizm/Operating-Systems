@@ -1,0 +1,7 @@
+#!/bin/ksh
+
+chgrp -R cps346 *
+
+find . -type f -exec chmod 640 {} \;
+
+find . -type d -exec chmod 750 {} \;

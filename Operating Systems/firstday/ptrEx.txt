@@ -1,0 +1,165 @@
+In-class exercises: pointers, character arrays, and standard i/o
+
+// p. 424 Structures, Unions, Bit Manipulations,
+and Enumerations Chapter 10 handout
+
+1) Write a single statement or set of statements
+to accomplish each of the following:
+
+a) Define a structure called part containing an int variable
+partNumber, and char array partName whose values may be
+as long as 25 characters.</li>
+
+struct part {
+   int partNumber;
+   char partNumber[26];
+}
+
+b) Define Part to be a synonym for the type struct part.
+
+typedef struct part Part;
+
+c) Use Part to declare variable a to be of type struct part,
+array b[10] to be of type struct part, and variable ptr to be
+of type pointer to struct part.
+
+Part a, b[10];
+Part* ptr = NULL;
+
+d) Read a part number and a part name from the keyboard into the
+individual members of variable a.
+
+scanf ("%d%s", &a.partNumber, a.partName);
+
+e) Assign the member values of variable a to element 3 of array b.
+
+b[2].partNumber = a.partNumber;
+strcpy (b[2].partName, a.partName);
+
+f) Assign the address of array b to the pointer variable ptr.
+
+ptr = b;
+
+g) Print the members values of element 3 of array b to
+the display using the variable
+ptr and the structure pointer operator to refer to the members.
+
+printf ("%d %s\n", (ptr+2)->partNumber, (ptr+2)->partName);
+
+/* composite program */
+#include <stdio.h>
+#include <string.h>
+
+struct part {
+   int partNumber;
+   char partName[25];
+};
+
+typedef struct part Part;
+
+main() {
+
+   Part a, b[10];
+   Part* ptr = NULL;
+
+   scanf ("%d%s", &a.partNumber, a.partName);
+   printf ("%d %s\n", a.partNumber, a.partName);
+
+   b[2].partNumber = a.partNumber;
+   strcpy (b[2].partName, a.partName);
+
+   ptr = b;
+
+   printf ("%d %s\n", (ptr+2)->partNumber, (ptr+2)->partName);
+}
+
+2) Assume the following variables have been declared as shown.
+
+double number1 = 7.3, number2;
+char* ptr = NULL;
+char s1[100], s2[100];
+
+a) Declare the variable dPtr to be a pointer to a variable
+of type double.
+
+double* dPtr = NULL;
+
+b) Assign the address of variable number1 to pointer variable dPtr.
+
+dPtr = &number1;
+
+c) Print the value of the variable pointed to by dPtr to the display.
+
+printf ("%f\n", *dPtr);
+
+d) Assign the value of the variable pointed to by dPtr to variable number2.
+
+number2 = *dPtr;
+
+e) Print the value of number2 to the display.
+
+printf ("%f\n", number2);
+
+f) Print the address of number1 to the display.
+
+printf ("%x\n", &number1);
+
+g) Print the address stored in dPtr to the display.
+
+printf ("%x\n", dPtr);
+
+Is the value printed the equal to the address of number1?
+
+Yes.
+
+h) Copy the string stored in character array s1 into character array s2.
+
+strcpy (s2, s1);
+
+i) Compare the string stored in character array s1 with
+the string in character array s2, and print the result.
+
+printf ("%d\n", strcmp (s1, s2));
+
+j) Append the string in character array s2 to the string in character array s1.
+
+/* will this cause a run-time error */
+strcat (s1, s2);
+
+k) Determine the length of the string stored in character array s1,
+and print the result.
+
+printf ("%d\n", strlen (s1));
+
+/* composite program */
+#include <stdio.h>
+#include <string.h>
+
+main() {
+
+   double number1 = 7.3, number2;
+   char* ptr = NULL;
+   char s1[100] = "hello", s2[100] = " world";
+
+   double* dPtr = NULL;
+
+   dPtr = &number1;
+
+   printf ("%f\n", *dPtr);
+
+   number2 = *dPtr;
+
+   printf ("%f\n", number2);
+   printf ("%x\n", &number1);
+
+   printf ("%x\n", dPtr);
+
+   strcpy (s2, s1);
+
+   printf ("%d\n", strcmp (s1, s2));
+
+   /* will this cause a run-time error */
+   strcat (s1, s2);
+
+   printf ("%d\n", strlen (s1));
+}

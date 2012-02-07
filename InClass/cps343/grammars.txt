@@ -1,0 +1,237 @@
+(r1) <sentence> ::= <article> <noun> <verb> <adverb> .
+(r2)  <article> ::= a | an | the
+(r3)     <noun> ::= dog | cat | Tommy
+(r4)     <verb> ::= runs | jumps
+(r5)   <adverb> ::= slow | fast
+
+generate "the dog runs fast."
+
+apply rules in a top-down fashion
+
+// called a "derivation"
+<sentence> => <article> <noun> <verb> <adverb> . (r1)
+           => <article> <noun> <verb> fast .     (r5)
+           => <article> <noun> runs fast .       (r4)
+           => <article> dog runs fast .          (r3)
+           => the dog runs fast .                (r2)
+
+(r1)     <expr> ::= <expr> + <expr>
+(r2)     <expr> ::= <expr> - <expr>
+(r3)     <expr> ::= <expr> * <expr>
+(r4)     <expr> ::= <expr> / <expr>
+(r5)     <expr> ::= <id>
+(r6)       <id> ::= x | y | z
+(r7)     <expr> ::= (<expr>)
+(r8)     <expr> ::= <number>
+(r9)   <number> ::= <number> <digit>
+(r10)  <number> ::= <digit>
+(r11)   <digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+leftmost/rightmost derivations:
+
+// leftmost derivation of "234"
+<exp> => <number>                 (r8)
+         <number> <digit>         (r9)
+         <number> <digit> <digit> (r9)
+         <digit> <digit> <digit>  (r10)
+         2 <digit> <digit>        (r11)
+         23 <digit>               (r11)
+         234                      (r11)
+
+// rightmost derivation of "234"
+<exp> => <number>           (r8)
+         <number> <digit>   (r9) 
+         <number> 4         (r11)
+         <number> <digit> 4 (r9)
+         <number> 34        (r11)
+         <digit> 34         (r10)
+         234                (r11)
+
+// neither rightmost or leftmost derivation of "234"
+<exp> => <number>                 (r8)
+         <number> <digit>         (r9)
+         <number> <digit> <digit> (r9)
+         <number> <digit> 4       (r11)
+         <number> 34              (r11)
+         <digit> 34               (r10)
+         234                      (r11)
+
+// neither rightmost or leftmost derivation of "234"
+<exp> => <number>                 (r8)
+         <number> <digit>         (r9)
+         <number> <digit> <digit> (r9)
+         <number> 3 <digit>       (r11)
+         <digit> 3 <digit>        (r10)
+         23 <digit>               (r11)
+         234                      (r11)
+
+generate "x + y * z"
+
+<expr> => <expr> + <expr>          (r1)
+          <expr> + <expr> * <expr> (r2)
+          <expr> + <expr> * <id>   (r5)
+          <expr> + <expr> * z      (r6)
+          <expr> + <id> * z        (r5)
+          <expr> + y * z           (r6)
+          <id> + y * z             (r5)
+           x + y * z               (r6)
+
+Can we use a grammar for language recognition?
+
+(generation): grammar => sentence 
+(recognition): sentence => grammar (start NT)
+
+Let's parse: "x+y*z".
+
+. x + y * z                (shift)
+x . + y * z                (reduce r6)
+<id> . + y * z             (reduce r5)
+<expr> . + y * z           (shift)
+<expr> + . y * z           (shift)
+<expr> + y . * z           (reduce r6)
+<expr> + <id> . * z        (reduce r5)
+<expr> + <expr> . * z      (shift)   <-- why not reduce r1 here instead? 
+<expr> + <expr> * . z      (shift)
+<expr> + <expr> * z .      (reduce r6)
+<expr> + <expr> * <id> .   (reduce r5)
+<expr> + <expr> * <expr> . (reduce r2; emit multiple)
+<expr> + <expr> .          (reduce r1; emit addition)
+<expr> .                   (start symbol...hurray! this is a valid sentence)
+
+(r1)     <expr> ::= <expr> + <expr>
+(r2)     <expr> ::= <expr> - <expr>
+(r3)     <expr> ::= <expr> * <expr>
+(r4)     <expr> ::= <expr> / <expr>
+(r5)     <expr> ::= <id>
+(r6)       <id> ::= x | y | z
+(r7)     <expr> ::= (<expr>)
+(r8)     <expr> ::= <number>
+(r9)   <number> ::= <number> <digit>
+(r10)  <number> ::= <digit>
+(r11)   <digit> ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+the above parse exhibits a shift-reduce conflict
+   - if we shift, multiplication will have higher precedence (desired)
+   - if we reduce, addition will have higher precedence
+
+there is also a reduce-reduce conflict (those the above parse does not have
+one); consider the following:
+
+(r1)  <exp> ::= <term>
+(r2)  <exp> ::= <id>
+(r3) <term> ::= <id>
+(r4)   <id> ::= x | y | z
+
+let's parse x
+
+. x           (reduce r4)
+<id> .   <--- now, shall we reduce r2 or r3 here?
+
+the underlying cause of a shift-reduce conflict and a reduce-reduce conflict
+is an ambiguous grammar 
+
+
+language                    generator                  model of computation
+==================================================================================
+regular language            regular grammars           finite state automata (FSA)
+context-free language (CFL) context-free grammar (CFG) pushdown automata (PDA)
+
+Ambiguity
+
+same or different?
+
+sentence     derivation     parse tree      meaning (semantics)
+---------------------------------------------------------------
+234          multiple       one             one
+2+3+4        multiple       multiple        one             
+2+3*4        multiple       multiple        multiple 
+6-3-2        multiple       multiple        multiple
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sentence     derivation     parse tree      meaning (semantics)
+---------------------------------------------------------------
+234          multiple       one             one  
+2+3+4        multiple       multiple        one 
+2+3*4        multiple       multiple        multiple 
+6-3-2        multiple       multiple        multiple
+
+Is ambiguity a problem for language generation or recognition?
+
+Consider parsing: "Times flies like an arrow".
+
+Syntax should imply semantics (a complaint against systems like UNIX)
+   - precedence
+   - associativity
+
+proposed fix where * takes precedence over +:
+
+(r1) <expr> ::= <expr> + <expr>
+(r2) <expr> ::= <expr> - <expr>
+(r3) <expr> ::= <term>        
+(r4) <term> ::= <term> * <term>
+(r5) <term> ::= <term> / <term>
+(r6) <term> ::= (<expr>)        
+(r7) <term> ::= <number>
+
+is it unambiguous now?
+
+2+3+4
+6-2-3
+
+left-recursive leads to left associativity
+right-recursive leads to right associativity
+mechanical process: take a compilers course!
+
+(r1)   <expr> ::= <expr> + <term>   
+(r2)   <expr> ::= <expr> - <term>  
+(r3)   <expr> ::= <term>          
+(r4)   <term> ::= <term> * <factor>
+(r5)   <term> ::= <term> / <factor>
+(r6)   <term> ::= <factor>        
+(r7) <factor> ::= (<expr>)       
+(r8) <factor> ::= <number>      
+
+theme: add another level of indirection by introducing a new non-terminal
+
+notice rules get lengthy
+
+why do we prefer a small rule set?
+
+another example of ambiguity; (<term>)-<term> in C can mean two different things
+
+subtracting: (10) - 2
+typecasting: (int) - 3.5
+
+hello world of disambiguating grammars
+
+  if (a < 2) then
+      if (b > 3) then
+        x
+      else /* associates with which if above ? */
+        y
+
+ambiguous grammar:
+        <stmt> ::= if <cond> then <stmt>
+        <stmt> ::= if <cond> then <stmt> else <stmt>
+
+exercise: develop an unambiguous version
+
+ambiguous grammar: small and leads to a fast parser, but is ambiguous
+unambiguous grammar: large and leads a slow parser, but has no ambiguity
+
+C still uses an ambiguous grammar, why? rules get lengthy and impractical to implement

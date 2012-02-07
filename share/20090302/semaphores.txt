@@ -1,0 +1,144 @@
+Semaphores:
+   - hardware solutions are complex for an application programmer to use
+   - to improve on this, we define a `semaphore' as an abstract data type
+     whose operations are limited to:
+
+       - initialization
+       - acquire(); also called wait(s) or P(s)
+       - release(); also called signal(s) or V(s)
+
+   - definitions of acquire and release:
+
+       acquire() {
+          while (value <= 0);
+          value--;
+       }
+
+       release() {
+          value++;
+       }
+
+   - requirements
+       - modifications to the semaphore value must be atomic
+       - testing of semaphore value in acquire must be atomic
+       - how can we guarantee these requirements?
+
+Using a binary semaphore for mutual exclusion:
+
+Semaphore s = new Semaphore(1);
+
+s.acquire();
+// critical section
+s.release();
+// remainder section
+
+Semaphores can also be used for many specific synchronization situations.  If
+stmt1 in p0 must execute before stmt2 in p1, then initialize a semaphore s to
+0.
+
+p0          s=0      p1
+--                   --
+stmt1;               s.acquire();
+s.realease();        stmt2;
+
+The n-process critical section problem is solved by sharing one semaphore.  If
+you initialize mutex to 5, then only 5 processes could execute their <cs> at
+once; it is flexible (see SemEx.java)
+
+What is the problem with our definitions of release() and acquire()?
+busy waiting, i.e., the waiting process uses unproductive CPU cycles.
+
+Spinlock: a semaphore doing busy waiting; it spins waiting for a lock.
+
+In a uniprocessor system, its waits until its time slice expires.
+
+A modification: define a waiting list L for each semaphore.
+
+Now we define acquire() and release() as:
+
+acquire() {
+   value--;
+   if (value < 0) {
+      // add this process to list
+      // block;
+   }
+}
+
+release() {
+   value++;
+   if (value <= 0) {
+      // remove process p from list
+      // wakeup(p);
+   }
+}
+
+wakeup and block are basic OS system calls.
+
+A semaphore value can now become negative, which indicates how many processes
+are waiting, e.g., if a semaphore value is -5, then 5 processes are waiting on
+that semaphore.
+
+Two ways of waiting:
+   - busy waiting: process which does the busy waiting first does not
+                   necessarily get to execute their <cs> first
+   - queue: process which goes on the blocked queue first gets to execute
+            their <cs> first.
+
+Again, modifications to the semaphore value must be atomic, and
+testing of semaphore value in acquire must be atomic.
+
+How to solve `this' ciritical section problem?
+   - in a uniprocessor system
+      - disable interrupts, or
+      - use any of the techniques presented above
+         - hardware instructions
+         - Peterson's solution
+   - in a multiprocessor environment, use techniques above
+
+We have simply moved busy waiting to the <cs>s of the application programs,
+and limited busy waiting to the <cs>s of the acquire() and release()
+operations.
+
+Improper use of semaphores with wait queues can cause `deadlock'.
+
+Deadlock means a group of processes are all waiting for each other
+for some event.
+
+For example (the following system has the `potential' for deadlock):
+
+p0             s=1, q=1    p1
+--                         --
+s.acquire();               q.acquire();
+q.acquire();               s.acquire();;
+...                        ...
+s.release();               q.release();
+q.release();               s.release();
+
+If p0 executes s.acquire(), then p1 executes q.acquire(), the processes become
+deadlocked.
+
+Solution:
+ 
+p0            s=1, q=1     p1
+--                         --
+// order matters a great deal on the waits
+q.acquire();               q.acquire();
+s.acquire();               s.acquire();
+...                        ...
+// order does not matter that much on the signals 
+s.release();               q.release();
+q.release();               s.release();
+
+Types of semaphores 
+   - binary semaphore (sometimes called a `mutex lock'):
+     integer value can range only over 0 and 1
+
+   - counting semaphore: integer value can range over an unrestricted domain
+
+   - semaphore type can be an issue of implementation, or simple how a 
+     semaphore is used
+
+   - binary semaphores can be simpler to implement depending on
+     hardware support
+
+   - counting semaphores can be implemented using binary semaphores

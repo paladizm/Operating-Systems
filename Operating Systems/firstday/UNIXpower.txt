@@ -1,0 +1,5 @@
+Illustration of power of UNIX
+   - file renaming example 100 files ending in .c to .cpp
+   - correcting a syntax error (misspelt var name) in
+     100 .cpp files using sed
+   - text rearranging (last, first) => (first last) in vi

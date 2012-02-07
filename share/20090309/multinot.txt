@@ -1,0 +1,75 @@
+Multiple Notification
+
+Consider:
+   - five threads: t0 ... t4
+   - a shared variable turn
+   - a work() method
+
+synchronized void work(int id) {
+   while (turn != id) {
+      try { wait(); } catch (InterruptedException ie) { }
+
+   // do some work
+
+   // finished working
+
+   // now indicate to the next waiting thread that it is
+   // their turn to do some work
+
+   turn = (turn+1) % 5;
+
+   notify();
+}
+
+Assume:
+   turn = 3
+   t0 is runnable
+   t1, t2, and t4 are in the wait set for the object
+   t3 currently executing work()
+
+When t3 is done, it sets turn to 4 and calls notify().
+
+This call to notify() arbitrary picks a thread from the waiting set.
+
+t2 receives the notification, is placed on the ready queue
+and eventually resumes execution in work() from the wait() return
+   - tests the while loop condition,
+   - sees that it is not its turn, and
+   - calls wait again
+ 
+Ultimately, t0 and t3 call work() and also invoke wait(), since it is 
+neither of their turns.
+
+Now, all five threads are blocked in the wait set for the object resulting
+in deadlock.
+
+If we replace the call to notify() with a call to notifyAll():
+    - t1, t2, and t4 moves from the wait to entry set in the runnable (ready) state
+    - they compete for the object lock (monitor),
+    - ultimately, t1 and t2 call wait(), and
+    - t4 executes work()
+
+Lock lock = new ReentrantLock();
+Condition condvars[] = new Condition[5];
+
+for (int i=0; i < 5; i++) {
+    condvars[i] = lock.newCondition();
+
+void work(int id) {
+   lock.lock();
+
+   while (turn != id) 
+      condvars[id].await();
+
+   // do some work
+
+   // finished working
+
+   // now indicate to the next waiting thread that it is
+   // their turn to do some work
+
+    turn = (turn+1) % 5;
+    condvars[turn].signal();
+   
+    lock.unlock();
+}

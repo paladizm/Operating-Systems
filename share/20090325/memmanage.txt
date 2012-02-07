@@ -1,0 +1,354 @@
+Memory Management
+
+Memory most of the time means main memory (MM).
+
+Main memory is a resource which must be allocated and deallocated.
+
+Memory management techniques determine
+   - where and how a process resides in memory
+   - how addressing is performed
+
+I/O is the biggest bottleneck of any computer system.
+
+More memory makes your programs run faster.
+
+Memory Management Techniques
+   - single contiguous
+   - overlays
+   - fixed (static) partitions
+   - relocation (dynamic) partitions
+   - paging
+   - demand paging
+   - segmentation
+   - segmentation with demand paging
+ 
+(some are historical, some are not currently in use, but are presented
+for comparison purposes)
+
+For each technique, we will study
+   - algorithms
+   - advantages and disadvantages
+   - speed requirements
+
+Single Contiguous
+
+while (there is a new job ready)
+    if (the job size is <= memory size)
+       allocate memory
+       load and execute job
+       deallocate memory
+    else 
+       ERROR
+
+Advantages
+   - simplicity
+Disadvantages
+   - CPU wasted
+   - main memory not fully used (internal fragmentation)
+   - limited job size; limited to the size of main memory
+
+Overlays
+
+Programs are sectioned into modules.
+
+Not all modules need to be in main memory at the same time.
+
+        A
+        |
+  ---------------
+  |             |
+  B             E
+-----
+|   |
+C   D
+
+Programmer specifies which modules can overlay each other.
+
+Linker inserts commands to invoke the loader when the modules are referenced.
+
+Advantages
+   - reduced memory usage
+   - a job which is bigger than main memory now can run
+Disadvantages
+   - overlap map must be specified by programmer
+   - programmer must know memory requirements
+   - the programmer must strive for completely disjoint overlapped modules
+   - overlapped modules must be completely disjoint
+   - internal fragmentation
+
+Fixed (Static) Partitions
+
+Divide main memory up into a fixed number of partitions.
+
+The partitions do not have to be the same size, but at
+fixed (static) at boot time.
+
+A job is put into a partition which is large enough to hold it.
+
+    Main Memory
++------------------+
+|                  |
+|                  |
+|                  |
++------------------+   <-- partition boundary
+|                  |
+|                  |
+|                  |
++------------------+   <-- partition boundary
+|                  |
+|                  |
+|                  |
++------------------+   <-- partition boundary
+|                  |
+|                  |
+|                  |
++------------------+
+
+Advantages: first attempt at multiprogramming.
+
+Disadvantages
+   - job size is limited to largest partition size
+   - degree of multiprogramming limited by number of partitions
+   - memory is wasted in partition (internal fragmentation)
+   - a ready job might wait even if there is enough memory available
+     (external fragmentation)
+      - solutions
+         - wait
+         - defragment => compaction (can be expensive)
+         - break up process so that logical address space is not contiguous
+            - paging
+            - segmentation
+   - must translate relative address to physical address
+   - must protect memory space (from other user processes and OS)
+   - must determine partition for a job
+
+Binding
+   identifiers
+      --> relative address
+              --> physical address
+
+Base register: holds the address of the beginning of a partition.
+
+Bounds (limit) register: holds the length of the partition
+
+Address Binding and Protection
+
+   We must ensure that a process does not access memory space dedicated
+   to another process.
+
+   Each relative address is compared to the bound register.
+
+   If in range, the relative address is added to the base register to produce
+   a physical address.
+
+   All jobs have relative addresses as if they were loaded at address 0.
+
+Partition Selection Algorithms
+
+   Implementation requires a free block table.
+
+   Sorting the table in a particular manner results in a specific selection
+   algorithm:
+
+      First fit: sort by location
+         - wastes a third of MM
+
+      Best fit: sort by size (ascending) -- smallest
+                available partition which will hold the job;
+                produces smallest leftover hole
+
+      Worse fit: sort by size (descending) -- largest available
+                 partition which will hold the job
+         - produces largest leftover hole
+         - most efficient in terms of programming;
+           takes the least amount of effort (work)
+         - on random jobs, this algorithm performs the best
+
+Relation (Dynamic) Partitions
+
+   No initial partitions are created; memory is one big free partition.
+
+   As a new job is loaded, a partition is created big enough to store
+   that job.
+
+   The new partition is carved out of an existing free partition.
+
+   This leaves a smaller free partition.
+
+   We must still have a particular technique (first, best, or worst)
+   for selecting a free partition.
+
+Consider the following job stream with 100 blocks of total main memory:
+
+   - job 1 arrives (22 blocks)
+   - job 2 arrives (24 blocks)
+   - job 3 arrives (30 blocks)
+   - job 4 arrives (10 blocks)
+   - job 1 terminates
+   - job 3 terminates
+   - job 5 arrives (12 blocks)
+
+No matter what partition selection algorithm is used, the situation
+is the same until job 5 arrives:
+
+    Main Memory
+a +------------------+
+  |                  |
+  |  22 free blocks  |
+  |                  |
+b +------------------+ 
+  |                  |
+  | job 2 24 blocks  |
+  |                  |
+c +------------------+  
+  |                  |
+  |  30 free blocks  |
+  |                  |
+d +------------------+ 
+  |                  |
+  | job 4 10 blocks  |
+  |                  |
+e +------------------+
+  |                  |
+  |  14 free blocks  |
+  |                  |
+  +------------------+
+
+First fit:
+
+[diagram]
+
+What are the advantages and disadvantages of the selection?
+
+disadvantage: external fragmentation, compaction
+
+Worst fit tends to work out better statically.
+
+Free Partition Table
+
+Maim memory
+
+[diagram]
+
+First fit
+
+start   length
+==============
+ a        22
+ c        30
+ e        14
+
+Best fit
+    
+start   length
+==============
+ e        14
+ a        22
+ c        30
+
+Worst fit
+    
+start   length
+==============
+ c        30
+ a        22
+ e        14
+
+Dynamic Partitions
+
+Allocating a partition: from a partition from the first free partition
+of ample size
+
+Deallocationg a partition:
+   - return the partition to the free partition table
+   - merge with the other free partitions when possible
+
+    Main Memory
++------------------+
+|                  |
+|    occupied      |
+|                  |
++------------------+ 
+|       free       |
+|                  |
++------------------+   ==>
+|                  |
+|       free       |
+|                  |
+|                  |
++------------------+
+|    occupied      |
++------------------+
+
++------------------+
+|                  |
+|    occupied      |
+|                  |
++------------------+ 
+|                  |
+|                  |
+|       free       |
+|                  |
+|                  |
+|                  |
++------------------+
+|    occupied      |
++------------------+
+
+Binding time: when variables or instructions are bound to a physical
+memory location.
+
+Happens at
+   - conceptualization
+   - compile/link time: loaders just copies
+   - load time: loader must do work
+   - run time: loader just copies, but address must be resolved every time
+               used
+
+Solutions to external fragmentation:
+   - wait
+   - defragment
+   - break it up: paging
+   - compaction
+
+....
+
+Cache
+   - content addressable
+   - look aside?
+
+with look aside cache: (0.8)(20+100) + (0.2)(100+100) =  136 ms
+                             96      +      40
+
+Paging
+   - permits the physical address space of a process to be noncontiguous
+   - A whole process in main memory, but does not have to be contiguous
+   - split physical memory into fixed-sized blocks called frames
+   - split logical memory into blocks of same size called pages
+   - last page of process may not occupy an entire frame -- some internal
+     fragmentation
+   - frame and page size are an efficiency issue
+      - page size is between 4kb and 8kb
+   - paging increases context switch time, but
+       - overhead of page table decreases as page size increases
+
+logical address is a pair: (page number p, page offset d)
+
+which indexes into page table (which resides in the PCB).
+
+page table contains the base address of each frame in pyhsical memory
+
+p must be in range of the pages
+d must be less than the page size
+
+physical address = frame_number * page_size + offset
+
+For instance, (2, 325)
+
+Demand Paging
+   - same idea as straight paging, but now you only load a page on demand
+   - this gives a higher degree of multiprogramming with a little more
+     overhead
+
+virtual = in effect, if not in essence
+virtual memory: still limited by swaps
